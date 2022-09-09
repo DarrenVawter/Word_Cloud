@@ -5,6 +5,8 @@ Created on Thu Sep  8 16:06:20 2022
 @author: Darren Vawter
 """
 
+import numpy as np;
+
 class Sentence_Dual_Trie:
     
     def __init__(self):
@@ -105,21 +107,49 @@ class Sentence_Dual_Trie:
                 
             # Update node for next traversal step
             current_node = child;
-            
-    """
-    def Seed_Relations(self, token):
+          
+    def Get_Relations(self, token):
+               
+        relations = {};
         
-        for node in self.dictionary[token][1]:
+        token_data = self.dictionary[token];
+        
+        total_token_count = token_data.count;
+        
+        for instance in token_data.instances.items():
             
-            for child in node.children:
+            relative_token_count = instance[1]/total_token_count;
+            
+            for comparator in instance[0].children.items():
                 
-                if(child.token == token):
-                    continue;
+                # comparator[0] --> comparator token
+                # comparator[1] --> comparator node
+                        
+                total_comparator_count = self.dictionary[comparator[0]].count;
+                relative_comparator_count = comparator[1].count/total_comparator_count;
+
+                node_relation = 0;
+        
+                if(relative_comparator_count < total_comparator_count):
                     
-                    #TODO: change this
-                self.dictionary[child.token] = (self.dictionary[child.token][0]+child.depth*child.count, self.dictionary[child.token][1]);
-    """
+                    node_relation = comparator[1].depth * relative_comparator_count / relative_token_count;
                     
+                else:
+                    
+                    node_relation = comparator[1].depth * relative_token_count / relative_comparator_count;
+                                
+                if(comparator[0] not in relations):
+                
+                    relations[comparator[0]] = node_relation;
+                
+                else:
+                
+                    relations[comparator[0]] += node_relation;
+                    
+        max_relation = relations[token];
+        
+        return(relations, max_relation);
+                                        
     class Node:
         
         def __init__(self, token, depth):
@@ -155,12 +185,23 @@ trie.Insert_Sentence(["the","frog","lept"]);
 trie.Insert_Sentence(["the","frog","swam"]);
 trie.Insert_Sentence(["bat","man"]);
 
-"""
-trie.Seed_Relations("bat")
+paradigmatic_coordinates = np.zeros((len(trie.dictionary),1));
+
+(relations, max_relation) = trie.Get_Relations("bat");
+
+dictionary_index = 0;
 for token in trie.dictionary:
-    print(token,trie.dictionary[token][0])
-"""
-                
+    if(token in relations):   
+        paradigmatic_coordinates[dictionary_index] = relations[token];
+    else:
+        paradigmatic_coordinates[dictionary_index] = 0;
+    dictionary_index += 1;
+
+print(paradigmatic_coordinates);
+
+alpha = 1/2;
+
+print( (np.log((paradigmatic_coordinates+max_relation)/max_relation)/np.log(2))**alpha );
                 
                 
                 
