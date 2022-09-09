@@ -11,8 +11,8 @@ class Sentence_Dual_Trie:
         
         # Root of forward trie
         self.forward_root = self.Node("", 0);   
-        # Root of backward trie
-        self.backward_root = self.Node("", 0);   
+        # Root of backwards trie
+        self.backwards_root = self.Node("", 0);   
         # Dictionary of Token_Data objects
         self.dictionary = {};
         
@@ -20,10 +20,10 @@ class Sentence_Dual_Trie:
         
         # Insert sentence into forward trie
         
-        # Increment total sentence count at root
+        # Increment total sentence count at forward root
         self.forward_root.count += 1;
         
-        # Initialize traversal at root
+        # Initialize traversal at forward root
         current_node = self.forward_root;
         
         # Traverse each node corresponding to the tokens in the sentence
@@ -59,14 +59,53 @@ class Sentence_Dual_Trie:
                 token_data = self.dictionary[token];
                 
             # Add/Update the instance of the token in the token data
-            token_data.instances[current_node] = (current_node, child.count);
+            token_data.instances[current_node] = child.count;
             
-            # Increment the token count
+            # Increment the token's total count
             token_data.count += 1;
                 
             # Update node for next traversal step
             current_node = child;
 
+        # Insert sentence into backwards trie
+        
+        # Increment total sentence count at backwards root
+        self.backwards_root.count += 1;
+        
+        # Initialize traversal at backwards root
+        current_node = self.backwards_root;
+        
+        # Traverse each node corresponding to the tokens in the reversed sentence
+        for token in reversed(sentence_tokens):
+            
+            # If the current token is a new sequence, create a new child
+            if(token not in current_node.children):
+                
+                # Crate the child with the given token at 1 greater depth
+                child = self.Node(token, current_node.depth+1);
+                # Insert the child into the node's children node-map
+                current_node.children[token] = child;
+                
+            else:            
+                
+                # Else, grab the corresponding child
+                child = current_node.children[token];
+                
+            # Increment the number of occurences of the sequence
+            child.count += 1;                
+            
+            # The corrseponding Token_Data object must already exist, grab it
+            token_data = self.dictionary[token];
+                
+            # Add/Update the instance of the token in the token data
+            token_data.instances[current_node] = child.count;
+            
+            # Increment the token's total count
+            token_data.count += 1;
+                
+            # Update node for next traversal step
+            current_node = child;
+            
     """
     def Seed_Relations(self, token):
         
