@@ -7,6 +7,9 @@ Created on Thu Sep  8 16:06:20 2022
 
 import numpy as np;
 
+from nltk.tokenize import sent_tokenize;
+from nltk.corpus import brown;
+
 class Sentence_Dual_Trie:
     
     def __init__(self):
@@ -110,6 +113,10 @@ class Sentence_Dual_Trie:
           
     def Get_Relations(self, token):
                
+        #temp?
+        relationSum = 0;
+        nRelations = 0;
+        
         relations = {};
         
         token_data = self.dictionary[token];
@@ -120,8 +127,9 @@ class Sentence_Dual_Trie:
             
             relative_token_count = instance[1]/total_token_count;
             
+            #TODO take this in as a tuple
             for comparator in instance[0].children.items():
-                
+                                
                 # comparator[0] --> comparator token
                 # comparator[1] --> comparator node
                         
@@ -132,15 +140,21 @@ class Sentence_Dual_Trie:
         
                 if(relative_comparator_count < total_comparator_count):
                     
-                    node_relation = comparator[1].depth * relative_comparator_count / relative_token_count;
+                    #node_relation = comparator[1].depth * relative_comparator_count / relative_token_count;
+                    node_relation = relative_comparator_count / relative_token_count;
                     
                 else:
                     
-                    node_relation = comparator[1].depth * relative_token_count / relative_comparator_count;
-                                
+                    #node_relation = comparator[1].depth * relative_token_count / relative_comparator_count;
+                    node_relation = relative_token_count / relative_comparator_count;
+                                    
+                #temp?
+                relationSum += node_relation;
+                    
                 if(comparator[0] not in relations):
                 
-                    relations[comparator[0]] = node_relation;
+                    relations[comparator[0]] = node_relation; 
+                    nRelations += 1;
                 
                 else:
                 
@@ -148,7 +162,7 @@ class Sentence_Dual_Trie:
                     
         max_relation = relations[token];
         
-        return(relations, max_relation);
+        return(relations, max_relation, relationSum/nRelations);
                                         
     class Node:
         
@@ -175,34 +189,44 @@ class Sentence_Dual_Trie:
             self.instances = {};
             
 trie = Sentence_Dual_Trie();
-trie.Insert_Sentence(["hello"]);
-trie.Insert_Sentence(["hello"]);
-trie.Insert_Sentence(["hello"]);
-trie.Insert_Sentence(["the","bat","flew"]);
-trie.Insert_Sentence(["the","bat","flew"]);
-trie.Insert_Sentence(["the","frog","lept"]);
-trie.Insert_Sentence(["the","frog","lept"]);
-trie.Insert_Sentence(["the","frog","swam"]);
-trie.Insert_Sentence(["bat","man"]);
 
+ind = 0;
+for sentence in brown.sents():
+    trie.Insert_Sentence(sentence);
+    ind += 1;
+print(ind)
+        
 paradigmatic_coordinates = np.zeros((len(trie.dictionary),1));
 
-(relations, max_relation) = trie.Get_Relations("bat");
+"""
+max_t = 0;
+max_token = token;
+for token_data in trie.dictionary.values():
+    if(token_data.count>max_t):
+        max_t = token_data.count;
+        max_token = token_data.token;
+"""
+
+(relations, max_relation, avg) = trie.Get_Relations("the");
+
+print(len(trie.dictionary));
 
 dictionary_index = 0;
 for token in trie.dictionary:
     if(token in relations):   
         paradigmatic_coordinates[dictionary_index] = relations[token];
+        if(relations[token]>30*avg):
+            print(token,relations[token])
     else:
         paradigmatic_coordinates[dictionary_index] = 0;
     dictionary_index += 1;
 
+"""
 print(paradigmatic_coordinates);
-
 alpha = 1/2;
-
 print( (np.log((paradigmatic_coordinates+max_relation)/max_relation)/np.log(2))**alpha );
-                
+"""              
+
                 
                 
                 
